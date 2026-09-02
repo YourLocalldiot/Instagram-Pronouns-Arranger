@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Instagram Pronouns Arranger</title>
+<meta name="description" content="Check whether a word or phrase can be spelled with 1–4 Instagram pronouns.">
+<style>
+  :root{
+    --ig-bg:#000000;
+    --ig-surface:#262626;
+    --ig-surface-2:#121212;
+    --ig-border:#363636;
+    --ig-border-strong:#4d4d4d;
+    --ig-text:#f5f5f5;
+    --ig-text-2:#a8a8a8;
+    --ig-text-3:#7a7a7a;
+    --ig-blue:#0095f6;
+    --ig-accent:#4a5df9;
+    --ig-green:#58c322;
+    --ig-red:#ed4956;
+    --ig-gradient:linear-gradient(45deg,#f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+    --radius-input:12px;
+    --radius-btn:8px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ig-bg);
+    color:var(--ig-text);
+    font-family:var(--font);
+    font-size:16px;
+    line-height:1.4;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    min-height:100vh;
+  }
+
+  a{color:var(--ig-accent);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  .app{
+    max-width:640px;
+    margin:0 auto;
+    padding:28px 20px 64px;
+  }
+
+  /* ---------- Brand header ---------- */
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding-bottom:24px;
+    border-bottom:1px solid var(--ig-border);
+    margin-bottom:28px;
+  }
+  .brand .glyph{color:var(--ig-text);flex:none;}
+  .brand .wordmark{
+    font-size:22px;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+
+  h1{
+    font-size:20px;
+    font-weight:700;
+    margin:0 0 22px;
+  }
+
+  /* ---------- Fields ---------- */
+  .field{
+    position:relative;
+    border:1px solid var(--ig-border);
+    border-radius:var(--radius-input);
+    padding:10px 14px;
+    background:transparent;
+    transition:border-color .15s ease;
+  }
+  .field + .help{margin-top:8px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--ig-text-2);
+    margin-bottom:2px;
+  }
+  .field input{
+    width:100%;
+    border:0;
+    background:transparent;
+    color:var(--ig-text);
+    font-family:inherit;
+    font-size:17px;
+    padding:2px 0;
+    outline:none;
+  }
+  .field input::placeholder{color:var(--ig-text-3);}
+  .field:focus-within{border-color:var(--ig-border-strong);}
+
+  .field--readonly{margin-top:22px;}
+  .pronoun-value{
+    font-size:17px;
+    min-height:23px;
+    padding:2px 0;
+    word-break:break-word;
+  }
+  .pronoun-value .p{color:var(--ig-text);}
+  .pronoun-value .s{color:var(--ig-text-3);padding:0 3px;}
+  .pronoun-value.empty{color:var(--ig-text-3);}
+
+  .counter{
+    position:absolute;
+    right:14px;
+    bottom:10px;
+    font-size:12px;
+    color:var(--ig-text-3);
+  }
+  .field--readonly.ok{
+    border-color:transparent;
+    background:
+      linear-gradient(var(--ig-bg),var(--ig-bg)) padding-box,
+      var(--ig-gradient) border-box;
+    border:1px solid transparent;
+  }
+  .field--readonly.bad{border-color:var(--ig-red);}
+
+  .help{
+    font-size:12px;
+    color:var(--ig-text-2);
+    margin:0 0 4px;
+  }
+
+  /* ---------- Language breakdown ---------- */
+  .breakdown{
+    list-style:none;
+    margin:12px 0 0;
+    padding:0;
+    border:1px solid var(--ig-border);
+    border-radius:var(--radius-input);
+    overflow:hidden;
+  }
+  .breakdown li{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    padding:11px 14px;
+    font-size:14px;
+  }
+  .breakdown li + li{border-top:1px solid var(--ig-border);}
+  .breakdown .bp{
+    font-weight:600;
+    color:var(--ig-text);
+    flex:none;
+  }
+  .breakdown .bl{
+    color:var(--ig-text-2);
+    font-size:13px;
+    text-align:right;
+  }
+
+  /* ---------- Status ---------- */
+  .status{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    font-size:14px;
+    margin-top:20px;
+    min-height:22px;
+  }
+  .status .dot{flex:none;display:flex;line-height:0;}
+  .status .dot:empty{display:none;}
+  .status .dot svg{display:block;}
+  .status.ok{color:var(--ig-green);}
+  .status.bad{color:var(--ig-red);}
+  .status.idle{color:var(--ig-text-2);}
+  .status b{color:var(--ig-text);}
+
+  /* ---------- Alternatives ---------- */
+  .alts{margin-top:22px;}
+  .alts h2{
+    font-size:13px;
+    font-weight:600;
+    color:var(--ig-text-2);
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    margin:0 0 12px;
+  }
+  .combo-wrap{display:flex;flex-wrap:wrap;gap:8px;}
+  .combo{
+    border:1px solid var(--ig-border);
+    background:var(--ig-surface-2);
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:14px;
+    font-family:inherit;
+    color:var(--ig-text);
+    cursor:pointer;
+  }
+  .combo:hover{border-color:var(--ig-border-strong);}
+  .combo .s{color:var(--ig-text-3);padding:0 3px;}
+  .more-btn{
+    margin-top:12px;
+    background:none;border:0;color:var(--ig-accent);
+    font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0;
+  }
+  .more-btn:hover{text-decoration:underline;}
+
+  /* ---------- Examples ---------- */
+  .examples{margin-top:30px;padding-top:22px;border-top:1px solid var(--ig-border);}
+  .examples .row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px;}
+  .examples h2{
+    font-size:13px;font-weight:600;color:var(--ig-text-2);
+    text-transform:uppercase;letter-spacing:.4px;margin:0;
+  }
+  .surprise{
+    background:none;border:0;color:var(--ig-accent);
+    font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0;
+  }
+  .surprise:hover{text-decoration:underline;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    border:1px solid var(--ig-border);
+    background:transparent;
+    color:var(--ig-text);
+    border-radius:999px;
+    padding:7px 14px;
+    font-size:13px;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .chip:hover{background:var(--ig-surface);}
+
+  /* ---------- All pronouns ---------- */
+  .all-pronouns{margin-top:30px;padding-top:22px;border-top:1px solid var(--ig-border);}
+  .all-pronouns .row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px;}
+  .all-pronouns h2{
+    font-size:13px;font-weight:600;color:var(--ig-text-2);
+    text-transform:uppercase;letter-spacing:.4px;margin:0;
+  }
+  .all-count{font-size:12px;color:var(--ig-text-3);flex:none;}
+  .pronoun-list{
+    list-style:none;margin:0;padding:0;
+    display:flex;flex-wrap:wrap;gap:8px;
+  }
+  .pronoun-list li{display:flex;}
+  .pl{
+    display:flex;flex-direction:column;gap:1px;
+    border:1px solid var(--ig-border);
+    background:transparent;
+    border-radius:10px;
+    padding:7px 11px;
+    font-family:inherit;
+    text-align:left;
+    cursor:pointer;
+  }
+  .pl:hover{background:var(--ig-surface);border-color:var(--ig-border-strong);}
+  .pl .pl-name{font-weight:600;color:var(--ig-text);font-size:13px;}
+  .pl .pl-lang{color:var(--ig-text-2);font-size:11px;}
+  .pronoun-list li[hidden]{display:none;}
+  .list-toggle{
+    margin-top:12px;
+    background:none;border:0;color:var(--ig-accent);
+    font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:0;
+  }
+  .list-toggle:hover{text-decoration:underline;}
+  .list-toggle[hidden]{display:none;}
+
+  /* ---------- Footer ---------- */
+  footer{
+    margin-top:40px;
+    padding-top:22px;
+    border-top:1px solid var(--ig-border);
+    font-size:12px;
+    color:var(--ig-text-3);
+    line-height:1.7;
+  }
+  footer a{color:var(--ig-text-2);}
+  footer .credit{color:var(--ig-text-2);}
+
+  :focus-visible{outline:2px solid var(--ig-accent);outline-offset:2px;border-radius:4px;}
+
+  @media (max-width:600px){
+    .app{padding:20px 16px 56px;}
+    .breakdown li{flex-direction:column;gap:2px;}
+    .breakdown .bl{text-align:left;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="brand">
+    <svg class="glyph" viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5.4"/>
+      <circle cx="12" cy="12" r="4.4"/>
+      <circle cx="17.6" cy="6.4" r="1.3" fill="currentColor" stroke="none"/>
+    </svg>
+    <span class="wordmark">Barely Legal Instagram</span>
+  </header>
+
+  <main>
+    <h1>Instagram Pronouns Arranger</h1>
+
+    <div class="field">
+      <label for="wordInput">Word or phrase</label>
+      <input id="wordInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Try &ldquo;superhero&rdquo;">
+    </div>
+    <p class="help">Only letters count &mdash; spaces, numbers and punctuation are ignored. Accents are simplified (&aacute; &rarr; a), matching the source project. Each of the (up to 4) pronouns must be different, just like on Instagram.</p>
+
+    <div class="field field--readonly" id="pronounField">
+      <label>Pronouns</label>
+      <div class="pronoun-value empty" id="pronounValue">&mdash;</div>
+      <span class="counter" id="counter">0/4</span>
+    </div>
+
+    <ul class="breakdown" id="breakdown" hidden></ul>
+
+    <p class="help">Instagram shows 1&ndash;4 pronouns next to your name. Each pronoun's source language is listed above.</p>
+
+    <div class="status idle" id="status" aria-live="polite">
+      <span class="dot" aria-hidden="true"></span>
+      <span id="statusText">Type a word above to check it.</span>
+    </div>
+
+    <div class="alts" id="alts" hidden>
+      <h2 id="altsHeading">Other combinations</h2>
+      <div class="combo-wrap" id="comboWrap"></div>
+      <button class="more-btn" id="moreBtn" hidden></button>
+    </div>
+
+    <div class="examples">
+      <div class="row">
+        <h2>Examples</h2>
+        <button class="surprise" type="button" id="surprise">Surprise me</button>
+      </div>
+      <div class="chips" id="exampleChips"></div>
+    </div>
+
+    <div class="all-pronouns">
+      <div class="row">
+        <h2>All Instagram pronouns</h2>
+        <span class="all-count" id="allCount"></span>
+      </div>
+      <ul class="pronoun-list" id="pronounList"></ul>
+      <button class="list-toggle" type="button" id="listToggle" hidden></button>
+    </div>
+  </main>
+
+  <footer>
+    <div class="credit">
+      Created by <a href="https://github.com/YourLocalldiot" target="_blank" rel="noopener">YourLocalIdiot</a>.
+      Based on the <a href="https://github.com/SpyrosAcheimastos/instagram_pronouns" target="_blank" rel="noopener">instagram_pronouns</a>
+      project and pronoun list by <strong>SpyrosAcheimastos</strong>.
+      English word list from <a href="https://github.com/dwyl/english-words" target="_blank" rel="noopener">dwyl/english-words</a>.
+    </div>
+    <div>A fan-made tool. Not affiliated with Instagram or Meta.</div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // Which language(s) each Instagram pronoun comes from (from pronouns/*.txt).
+  var LANG = {"de":["Danish","Swedish"],"dem":["Danish","German","Swedish"],"des":["Danish"],"han":["Danish","Finnish","German","Norwegian","Swedish"],"ham":["Danish","German","Norwegian"],"hans":["Danish","Norwegian"],"hun":["Danish","Dutch","Norwegian"],"hende":["Danish"],"hendes":["Danish"],"ij":["Dutch"],"die":["Dutch","German"],"diens":["Dutch"],"hij":["Dutch"],"hem":["Dutch","German"],"haar":["Dutch"],"hen":["Dutch","German","Norwegian"],"het":["Dutch"],"hjin":["Dutch"],"zji":["Dutch"],"xe":["Dutch","English","German"],"xem":["Dutch","English"],"xir":["Dutch"],"co":["English"],"cos":["English"],"e":["English"],"ey":["English"],"em":["English","German"],"eir":["English"],"fae":["English","German"],"faee":["English"],"he":["English"],"him":["English"],"his":["English"],"she":["English"],"her":["English"],"hers":["English"],"mer":["English"],"mers":["English"],"ne":["English"],"nir":["English"],"nirs":["English"],"nee":["English"],"ner":["English"],"ners":["English"],"per":["English","German"],"pers":["English"],"they":["English"],"them":["English"],"theirs":["English"],"thon":["English"],"thons":["English"],"ve":["English"],"ver":["English"],"vis":["English"],"vi":["English"],"vir":["English"],"xyr":["English"],"ze":["English","German"],"zie":["English","German"],"zir":["English"],"hir":["English"],"hanet":["Finnish"],"hanen":["Finnish"],"elle":["French","Spanish"],"ellui":["French"],"el":["French","German"],"ul":["French"],"ulle":["French"],"il":["French"],"iel":["French"],"ille":["French"],"ielle":["French"],"i":["French"],"ol":["French"],"olle":["French"],"ael":["French"],"al":["French"],"son":["French"],"sa":["French"],"san":["French"],"saon":["French"],"lui":["French"],"er":["German"],"ersie":["German"],"en":["German","Swedish"],"enes":["German"],"eos":["German"],"et":["German"],"es":["German"],"ihn":["German"],"ihr":["German"],"ihre":["German"],"ios":["German"],"ioi":["German"],"ihrol":["German"],"iks":["German"],"ikses":["German"],"ind":["German"],"inds":["German"],"as":["German"],"sein":["German"],"sie":["German"],"sier":["German"],"sien":["German"],"soi":["German"],"sos":["German"],"seinos":["German"],"siem":["German"],"sierer":["German"],"sim":["German"],"sin":["German"],"sel":["German"],"ser":["German"],"sey":["German"],"sif":["German"],"sir":["German"],"dey":["German"],"denen":["German"],"demm":["German"],"deren":["German"],"faer":["German"],"zae":["German"],"zee":["German"],"zet":["German"],"zier":["German"],"xier":["German"],"xien":["German"],"xies":["German"],"xer":["German"],"xie":["German"],"xieren":["German"],"vii":["German"],"bla":["German"],"blas":["German"],"nin":["German"],"dia":["Indonesian"],"se":["Norwegian"],"sen":["Norwegian"],"henne":["Norwegian"],"hennes":["Norwegian"],"hens":["Norwegian"],"a":["Portuguese"],"ele":["Portuguese"],"ela":["Portuguese"],"eles":["Portuguese"],"elu":["Portuguese"],"ile":["Portuguese"],"o":["Portuguese","Turkish"],"os":["Portuguese"],"seu":["Portuguese"],"sua":["Portuguese"],"seus":["Portuguese"],"dele":["Portuguese"],"dela":["Portuguese"],"deles":["Portuguese"],"dile":["Portuguese"],"delu":["Portuguese"],"lo":["Portuguese"],"la":["Portuguese"],"los":["Portuguese"],"no":["Portuguese"],"na":["Portuguese"],"nos":["Portuguese"],"ella":["Spanish"],"elli":["Spanish"],"su":["Spanish"],"ens":["Swedish"],"deras":["Swedish"],"den":["Swedish"],"dess":["Swedish"],"dens":["Swedish"],"honom":["Swedish"],"onu":["Turkish"],"ona":["Turkish"],"onun":["Turkish"]};
+
+  var PRONOUNS = Object.keys(LANG);
+
+  var PSET = Object.create(null);
+  var MAXLEN = 1;
+  for (var i = 0; i < PRONOUNS.length; i++){
+    PSET[PRONOUNS[i]] = true;
+    if (PRONOUNS[i].length > MAXLEN) MAXLEN = PRONOUNS[i].length;
+  }
+
+  function langOf(p){
+    var l = LANG[p];
+    return l ? l.join(" · ") : "—";
+  }
+
+  var USABLE = {};
+  "abcdefhijklmnoprstuvxyz".split("").forEach(function(c){ USABLE[c] = true; });
+
+  var MAX_SLOTS = 4;
+  var DISPLAY_LIMIT = 12;
+
+  // ---- normalisation ----
+  function normalize(raw){
+    var s = (raw || "").toLowerCase();
+    // strip diacritics: decompose, then drop combining marks U+0300–U+036F
+    s = s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+    return s.replace(/[^a-z]/g, "");
+  }
+
+  // ---- solver: split `word` into 1..4 distinct pronouns ----
+  function solve(word){
+    var results = [];
+    var seenKey = Object.create(null);
+    var used = Object.create(null);
+    var parts = [];
+
+    function dfs(pos){
+      if (parts.length > MAX_SLOTS) return;
+      if (pos === word.length){
+        if (parts.length === 0) return;
+        var key = parts.join("/");
+        if (!seenKey[key]){
+          seenKey[key] = true;
+          results.push(parts.slice());
+        }
+        return;
+      }
+      if (parts.length === MAX_SLOTS) return;
+      var max = Math.min(MAXLEN, word.length - pos);
+      for (var L = 1; L <= max; L++){
+        var piece = word.substr(pos, L);
+        if (!PSET[piece]) continue;
+        if (used[piece]) continue;               // pronouns must be distinct
+        parts.push(piece);
+        used[piece] = true;
+        dfs(pos + L);
+        used[piece] = false;
+        parts.pop();
+      }
+    }
+
+    dfs(0);
+
+    results.sort(function(a, b){
+      if (a.length !== b.length) return a.length - b.length;
+      for (var k = 0; k < a.length; k++){
+        if (a[k] !== b[k]) return a[k] < b[k] ? -1 : 1;
+      }
+      return 0;
+    });
+    return results;
+  }
+
+  function missingLetters(word){
+    var bad = [], seen = {};
+    for (var i = 0; i < word.length; i++){
+      var c = word.charAt(i);
+      if (!USABLE[c] && !seen[c]){ seen[c] = true; bad.push(c); }
+    }
+    return bad;
+  }
+
+  // ---- rendering helpers ----
+  function renderParts(container, arr){
+    container.textContent = "";
+    for (var i = 0; i < arr.length; i++){
+      if (i > 0){
+        var slash = document.createElement("span");
+        slash.className = "s";
+        slash.textContent = "/";
+        container.appendChild(slash);
+      }
+      var p = document.createElement("span");
+      p.className = "p";
+      p.textContent = arr[i];
+      container.appendChild(p);
+    }
+  }
+
+  function joinList(list){
+    if (list.length === 1) return "“" + list[0] + "”";
+    if (list.length === 2) return "“" + list[0] + "” and “" + list[1] + "”";
+    return list.slice(0, -1).map(function(c){ return "“" + c + "”"; }).join(", ") +
+           " and “" + list[list.length - 1] + "”";
+  }
+
+  // ---- DOM ----
+  var input       = document.getElementById("wordInput");
+  var pronounField= document.getElementById("pronounField");
+  var pronounValue= document.getElementById("pronounValue");
+  var counter     = document.getElementById("counter");
+  var breakdown   = document.getElementById("breakdown");
+  var statusEl    = document.getElementById("status");
+  var statusText  = document.getElementById("statusText");
+  var alts        = document.getElementById("alts");
+  var altsHeading = document.getElementById("altsHeading");
+  var comboWrap   = document.getElementById("comboWrap");
+  var moreBtn     = document.getElementById("moreBtn");
+  var statusDot   = statusEl.querySelector(".dot");
+
+  var lastAlts = [];
+  var altsExpanded = false;
+
+  var ICONS = {
+    ok:  '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M6 10.4l2.6 2.6L14.4 7" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    bad: '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><circle cx="10" cy="10" r="10" fill="currentColor"/><path d="M7 7l6 6M13 7l-6 6" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round"/></svg>',
+    idle:''
+  };
+
+  function setStatus(kind, nodes){
+    statusEl.className = "status " + kind;
+    statusDot.innerHTML = ICONS[kind] || "";
+    statusText.textContent = "";
+    if (typeof nodes === "string"){
+      statusText.textContent = nodes;
+    } else {
+      nodes.forEach(function(n){ statusText.appendChild(n); });
+    }
+  }
+
+  function strong(t){
+    var b = document.createElement("b");
+    b.textContent = t;
+    return b;
+  }
+  function textNode(t){ return document.createTextNode(t); }
+
+  function renderBreakdown(combo){
+    breakdown.textContent = "";
+    combo.forEach(function(p){
+      var li = document.createElement("li");
+      var name = document.createElement("span");
+      name.className = "bp";
+      name.textContent = p;
+      var lang = document.createElement("span");
+      lang.className = "bl";
+      lang.textContent = langOf(p);
+      li.appendChild(name);
+      li.appendChild(lang);
+      breakdown.appendChild(li);
+    });
+    breakdown.hidden = combo.length === 0;
+  }
+
+  function renderAlts(){
+    comboWrap.textContent = "";
+    var show = altsExpanded ? lastAlts : lastAlts.slice(0, DISPLAY_LIMIT);
+    show.forEach(function(combo){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "combo";
+      btn.title = combo.map(function(p){ return p + " — " + langOf(p); }).join("\n");
+      renderParts(btn, combo);
+      btn.addEventListener("click", function(){
+        input.value = combo.join("");
+        update();
+        input.focus();
+      });
+      comboWrap.appendChild(btn);
+    });
+
+    var hiddenCount = lastAlts.length - show.length;
+    if (hiddenCount > 0 && !altsExpanded){
+      moreBtn.hidden = false;
+      moreBtn.textContent = "Show " + hiddenCount + " more";
+    } else {
+      moreBtn.hidden = true;
+    }
+  }
+
+  function update(){
+    var word = normalize(input.value);
+
+    // reset
+    pronounField.classList.remove("ok", "bad");
+    alts.hidden = true;
+    comboWrap.textContent = "";
+    altsHeading.textContent = "Other combinations";
+    breakdown.hidden = true;
+    breakdown.textContent = "";
+    lastAlts = [];
+    altsExpanded = false;
+    moreBtn.hidden = true;
+
+    if (!word){
+      pronounValue.className = "pronoun-value empty";
+      pronounValue.textContent = "—";
+      counter.textContent = "0/4";
+      setStatus("idle", "Type a word above to check it.");
+      return;
+    }
+
+    var results = solve(word);
+
+    if (results.length){
+      var best = results[0];
+      pronounValue.className = "pronoun-value";
+      renderParts(pronounValue, best);
+      counter.textContent = best.length + "/4";
+      pronounField.classList.add("ok");
+      renderBreakdown(best);
+
+      setStatus("ok", [
+        strong(word),
+        textNode(" works — " + best.length + (best.length === 1 ? " pronoun" : " pronouns") + ": "),
+        strong(best.join("/"))
+      ]);
+
+      var others = results.slice(1);
+      if (others.length){
+        lastAlts = others;
+        altsHeading.textContent = "Other combinations (" + others.length + ")";
+        alts.hidden = false;
+        renderAlts();
+      }
+      return;
+    }
+
+    // no result
+    pronounValue.className = "pronoun-value empty";
+    pronounValue.textContent = "—";
+    counter.textContent = "0/4";
+    pronounField.classList.add("bad");
+
+    var missing = missingLetters(word);
+    if (missing.length){
+      setStatus("bad", [
+        textNode("No Instagram pronoun uses the "),
+        textNode(missing.length === 1 ? "letter " : "letters "),
+        strong(joinList(missing)),
+        textNode(", so "),
+        strong(word),
+        textNode(" can’t be built.")
+      ]);
+    } else {
+      setStatus("bad", [
+        strong(word),
+        textNode(" can’t be split into 1–4 different Instagram pronouns.")
+      ]);
+    }
+  }
+
+  moreBtn.addEventListener("click", function(){
+    altsExpanded = true;
+    renderAlts();
+  });
+
+  input.addEventListener("input", update);
+
+  // ---- examples ----
+  var EXAMPLES = ["superhero","developer","lover","never","cosine","heroine","opera","laser","alive","idea"];
+  var SURPRISE_POOL = ["aero","alive","axe","blade","coala","code","cola","cool","cosine","deluxe","developer",
+    "dianoia","elvis","eros","ethanol","ethereal","heroine","hiroshima","idea","laser","looser","love","lover",
+    "nasa","never","none","odessa","oliver","olivia","opera","over","persia","save","seoul","sexier","sinner",
+    "super","supercool","superhero"];
+
+  var chipsWrap = document.getElementById("exampleChips");
+  EXAMPLES.forEach(function(w){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = w;
+    b.addEventListener("click", function(){
+      input.value = w;
+      update();
+      input.focus();
+    });
+    chipsWrap.appendChild(b);
+  });
+
+  document.getElementById("surprise").addEventListener("click", function(){
+    var w = SURPRISE_POOL[Math.floor(Math.random() * SURPRISE_POOL.length)];
+    input.value = w;
+    update();
+  });
+
+  // ---- full pronoun list (alphabetical) ----
+  var pronounList = document.getElementById("pronounList");
+  var sorted = PRONOUNS.slice().sort();
+  sorted.forEach(function(p){
+    var li = document.createElement("li");
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "pl";
+    var n = document.createElement("span");
+    n.className = "pl-name";
+    n.textContent = p;
+    var l = document.createElement("span");
+    l.className = "pl-lang";
+    l.textContent = langOf(p);
+    b.appendChild(n);
+    b.appendChild(l);
+    b.addEventListener("click", function(){
+      input.value = p;
+      update();
+      input.focus();
+      input.scrollIntoView({ block: "center" });
+    });
+    li.appendChild(b);
+    pronounList.appendChild(li);
+  });
+  document.getElementById("allCount").textContent = sorted.length + " total";
+
+  // ---- collapse the pronoun list to 3 rows ----
+  var VISIBLE_ROWS = 3;
+  var listToggle = document.getElementById("listToggle");
+  var listExpanded = false;
+  var listItems = Array.prototype.slice.call(pronounList.children);
+
+  function applyListCollapse(){
+    // measure with everything visible
+    listItems.forEach(function(li){ li.hidden = false; });
+
+    if (listExpanded){
+      listToggle.hidden = false;
+      listToggle.textContent = "Show less";
+      return;
+    }
+
+    // find the vertical offset where the 4th row starts
+    var rowTops = [];
+    listItems.forEach(function(li){
+      var t = li.offsetTop;
+      if (rowTops.indexOf(t) === -1) rowTops.push(t);
+    });
+    rowTops.sort(function(a, b){ return a - b; });
+
+    if (rowTops.length <= VISIBLE_ROWS){
+      listToggle.hidden = true;          // everything already fits
+      return;
+    }
+
+    var cutoff = rowTops[VISIBLE_ROWS];
+    var hiddenCount = 0;
+    listItems.forEach(function(li){
+      if (li.offsetTop >= cutoff){ li.hidden = true; hiddenCount++; }
+    });
+    listToggle.hidden = false;
+    listToggle.textContent = "Show all " + sorted.length + " pronouns (" + hiddenCount + " more)";
+  }
+
+  listToggle.addEventListener("click", function(){
+    listExpanded = !listExpanded;
+    applyListCollapse();
+  });
+
+  var resizeTimer;
+  window.addEventListener("resize", function(){
+    if (listExpanded) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(applyListCollapse, 150);
+  });
+
+  applyListCollapse();
+
+  update();
+})();
+</script>
+</body>
+</html>
